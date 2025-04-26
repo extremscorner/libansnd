@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 2.8.12)
+
+project(example_simple_looping C)
+
+add_executable(example_simple_looping 
+	${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
+)
+
+target_include_directories(example_simple_looping PRIVATE
+	${CMAKE_SOURCE_DIR}/include
+	${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(example_simple_looping ansnd ogc)
+
+create_dol(example_simple_looping)
