@@ -529,20 +529,18 @@ static void ansnd_fill_stream_buffers(ansnd_voice_t* voice) {
 		#endif
 		
 		// offset the end address so that the DSP accelerator overflow interrupt is generated at the right time
-		u32 end_offset = 0;
 		u32 channels   = 1;
 		if (voice->flags & VOICE_FLAG_STEREO) {
-			end_offset = 1;
 			channels   = 2;
 		}
 		
-		u32 memory_shift     = 0;
+		u32 memory_shift = 0;
 		if (voice->accelerator_gain == DSP_ACCL_GAIN_16BIT) {
-			memory_shift     = 1;
+			memory_shift = 1;
 		}
 		
 		voice->streaming.next_buffer_start = data_buffer.frame_data_ptr >> memory_shift;
-		voice->streaming.next_buffer_end   = voice->streaming.next_buffer_start + data_buffer.frame_count * channels - end_offset;
+		voice->streaming.next_buffer_end   = voice->streaming.next_buffer_start + data_buffer.frame_count * channels - 1;
 		voice->streaming.next_buffer_first = voice->streaming.next_buffer_start;
 	}
 }
@@ -872,18 +870,15 @@ s32 ansnd_configure_pcm_voice(u32 voice_id, const ansnd_pcm_voice_config_t* voic
 	voice->flags |= VOICE_FLAG_UPDATED;
 	voice->flags |= VOICE_FLAG_CONFIGURED;
 	
-	// offset the end address so that the DSP accelerator overflow interrupt is generated at the right time
-	u32 end_offset = 0;
 	if (voice_config->channels == 2) {
 		voice->flags |= VOICE_FLAG_STEREO;
-		end_offset = 1;
 	}
 	
 	voice->left_volume  = voice_config->left_volume;
 	voice->right_volume = voice_config->right_volume;
 	
 	voice->ram_buffer_start = voice_config->frame_data_ptr >> memory_shift;
-	voice->ram_buffer_end   = voice->ram_buffer_start + voice_config->frame_count * voice_config->channels - end_offset;
+	voice->ram_buffer_end   = voice->ram_buffer_start + voice_config->frame_count * voice_config->channels - 1;
 	voice->ram_buffer_first = voice->ram_buffer_start + voice_config->start_offset * voice_config->channels;
 	
 	if ((voice_config->loop_start_offset != 0) ||
@@ -891,7 +886,7 @@ s32 ansnd_configure_pcm_voice(u32 voice_id, const ansnd_pcm_voice_config_t* voic
 		voice->flags |= VOICE_FLAG_LOOPED;
 		
 		voice->looping.loop_start = voice->ram_buffer_start + voice_config->loop_start_offset * voice_config->channels;
-		voice->looping.loop_end   = voice->ram_buffer_start + voice_config->loop_end_offset * voice_config->channels - end_offset;
+		voice->looping.loop_end   = voice->ram_buffer_start + voice_config->loop_end_offset * voice_config->channels - 1;
 	}
 	
 	ansnd_parameter_block_t* parameter_block_base = (ansnd_parameter_block_t*)ansnd_dsp_dram_image;
