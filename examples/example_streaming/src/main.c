@@ -187,11 +187,12 @@ static s32 reset_data() {
 	}
 	
 	// reset all buffers
-	next_buffer = 0;
 	for (u32 i = 0; i < SOUND_BUFFERS; ++i) {
-		bytes_available[0] = 0;
+		bytes_available[i] = 0;
+		next_buffer = i;
 		read_data();
 	}
+	next_buffer = 0;
 	
 #if defined(HW_DOL)
 	// ARAM pointers are not converted
