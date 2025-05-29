@@ -78,10 +78,11 @@ int main(int argc, char** argv) {
 	
 	printf("Allocating voice...\n");
 	s32 voice_id = ansnd_allocate_voice();
-	print_error(voice_id);
 	if (voice_id < 0) {
+		print_error(voice_id);
 		printf("Voice allocation failed.\n");
 		printf("Exiting...\n");
+		VIDEO_WaitVSync();
 		return 0;
 	}
 	printf("Voice allocation complete.\n");
@@ -89,8 +90,10 @@ int main(int argc, char** argv) {
 	printf("Configuring voice...\n");
 	s32 error = ansnd_configure_pcm_voice(voice_id, &voice_config);
 	if (error < 0) {
+		print_error(error);
 		printf("Voice configuration failed.\n");
 		printf("Exiting...\n");
+		VIDEO_WaitVSync();
 		return 0;
 	}
 	printf("Voice configuration complete.\n");

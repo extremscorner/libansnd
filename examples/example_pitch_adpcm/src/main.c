@@ -88,9 +88,9 @@ int main(int argc, char** argv) {
 	// allocating multiple voices so a few can overlap
 	for (u32 i = 0; i < number_voices; ++i) {
 		s32 voice_id = ansnd_allocate_voice();
-		print_error(error);
 		
 		if (voice_id < 0) {
+			print_error(voice_id);
 			printf("Voice allocation failed.\n");
 			printf("Exiting...\n");
 			VIDEO_WaitVSync();

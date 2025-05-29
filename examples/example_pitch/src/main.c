@@ -43,6 +43,7 @@ int main(int argc, char** argv) {
 	s32 error = read_wav_header(&wav_header, (void*)C4, C4_size);
 	if (error < 0) {
 		printf("Exiting...\n");
+		VIDEO_WaitVSync();
 		return 0;
 	}
 	
@@ -98,11 +99,12 @@ int main(int argc, char** argv) {
 	// allocating multiple voices so a few can overlap
 	for (u32 i = 0; i < number_voices; ++i) {
 		s32 voice_id = ansnd_allocate_voice();
-		print_error(error);
 		
 		if (voice_id < 0) {
+			print_error(voice_id);
 			printf("Voice allocation failed.\n");
 			printf("Exiting...\n");
+			VIDEO_WaitVSync();
 			return 0;
 		}
 		
@@ -122,6 +124,7 @@ int main(int argc, char** argv) {
 		if (error < 0) {
 			printf("Voice ID: %d configuration failed.\n", voice_id);
 			printf("Exiting...\n");
+			VIDEO_WaitVSync();
 			return 0;
 		}
 	}

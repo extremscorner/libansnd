@@ -99,8 +99,8 @@ int main(int argc, char** argv) {
 	
 	printf("Allocating voice...\n");
 	voice_id = ansnd_allocate_voice();
-	print_error(voice_id);
 	if (voice_id < 0) {
+		print_error(voice_id);
 		printf("Voice allocation failed.\n");
 		ov_clear(&vorbis_file);
 		fclose(file);
