@@ -1,3 +1,7 @@
+cmake_minimum_required(VERSION 2.8.12...3.10)
+
+project(examples C)
+
 function(create_dol target)
 	if (NOT ELF2DOL_EXE)
 		message(FATAL_ERROR "Could not find elf2dol: try installing gamecube-tools")
