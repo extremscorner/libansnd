@@ -49,15 +49,17 @@ int main(int argc, char** argv) {
 	
 	// copy sound data to a buffer aligned at a 32 byte boundary
 	u32 sound_buffer_size = wav_header.DataSize;
-	s16* sound_buffer = (s16*)memalign(32, sound_buffer_size);
+	u32 sound_buffer_size_32 = (((sound_buffer_size / 32) + 1) * 32);
+	s16* sound_buffer = (s16*)memalign(32, sound_buffer_size_32);
 	memcpy((void*)sound_buffer, C4 + sizeof(wav_header_t), sound_buffer_size);
+	memset(((void*)sound_buffer) + sound_buffer_size, 0, sound_buffer_size_32 - sound_buffer_size);
 	// convert sound data from little-endian to big-endian
 	for (u32 i = 0; i < sound_buffer_size / 2; ++i) {
 		sound_buffer[i] = __builtin_bswap16(sound_buffer[i]);
 	}
 	
 	// flush the sound data from the CPU cache
-	DCFlushRange(sound_buffer, sound_buffer_size);
+	DCFlushRange(sound_buffer, sound_buffer_size_32);
 	
 #if defined(HW_DOL)
 	// on the GameCube, sound samples need to be transferred to ARAM before they can be used
@@ -67,10 +69,10 @@ int main(int argc, char** argv) {
 	
 	ARQ_Init();
 	
-	u32 sound_buffer_ptr = AR_Alloc(sound_buffer_size);
+	u32 sound_buffer_ptr = AR_Alloc(sound_buffer_size_32);
 	
 	ARQRequest aram_request;
-	ARQ_PostRequest(&aram_request, 0, ARQ_MRAMTOARAM, ARQ_PRIO_HI, sound_buffer_ptr, (u32)MEM_VIRTUAL_TO_PHYSICAL(sound_buffer), sound_buffer_size);
+	ARQ_PostRequest(&aram_request, 0, ARQ_MRAMTOARAM, ARQ_PRIO_HI, sound_buffer_ptr, (u32)MEM_VIRTUAL_TO_PHYSICAL(sound_buffer), sound_buffer_size_32);
 #elif defined(HW_RVL)
 	// Wii just needs to convert the pointer from virtual to physical
 	u32 sound_buffer_ptr = (u32)MEM_VIRTUAL_TO_PHYSICAL(sound_buffer);
