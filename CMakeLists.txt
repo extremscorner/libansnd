@@ -1,6 +1,11 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 2.8.12...3.10)
 
 project(libansnd C)
+
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+	set(CMAKE_INSTALL_PREFIX "${OGC_ROOT}" CACHE PATH "" FORCE)
+	set(CMAKE_INSTALL_LIBDIR "lib/${OGC_SUBDIR}" CACHE PATH "" FORCE)
+endif()
 
 if (NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE "Release")
@@ -40,3 +45,17 @@ if(ANSND_STANDALONE)
 		add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/examples)
 	endif()
 endif()
+
+include(GNUInstallDirs)
+
+install(
+	TARGETS ansnd
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(
+	DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+	FILES_MATCHING
+		PATTERN ansndlib.h
+)
