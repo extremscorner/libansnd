@@ -109,8 +109,8 @@ VOICE_FLAG_STEREO:     equ 0x0001
 
 // Memory defines
 MAX_PARAMETER_BLOCKS:        equ 48
-NUMBER_SAMPLES:              equ 96
-SOUND_BUFFER_SIZE:           equ 384  // size in bytes
+NUMBER_SAMPLES:              equ 240
+SOUND_BUFFER_SIZE:           equ 960  // size in bytes
 PARAMETER_BLOCK_STRUCT_SIZE: equ 128  // size in bytes
 WORKING_MEMORY_SIZE:         equ 64   // size in words
 DATA_RAM_SIZE:               equ 4096 // size in words
@@ -550,11 +550,11 @@ channels_end:
 // v Output Sound Buffer Address & Delay setup v
 	lri       $ar0,    #WORK_DELAY
 	lrr       $acc0.m, @$ar0
-	lris      $acc1.m, #NUMBER_SAMPLES
+	lri       $acc1.m, #NUMBER_SAMPLES
 	sub       $acc1,   $acc0
 	jge       init_pb_delay_some_samples
 init_pb_delay_no_samples:
-	lris      $acx1.h, #NUMBER_SAMPLES
+	lri       $acx1.h, #NUMBER_SAMPLES
 	subr      $acc0.m, $acx1.h
 	clr's     $acc1                                  : @$ar0,   $acc0.m
 	jmp       init_pb_delay_end
@@ -759,8 +759,9 @@ accelerator_address_overflow_end:
 // clobbers $acc0, $ar0
 clear_audio_buffer:
 	clr       $acc0
+	lri       $acc0.l, #(SOUND_BUFFER_SIZE / 2)
 	lri       $ar0,    #SOUND_BUFFER_BASE
-	loopi     #(SOUND_BUFFER_SIZE / 2)
+	loop      $acc0.l
 	srri      @$ar0,   $acc0.m
 	ret
 

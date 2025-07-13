@@ -51,7 +51,7 @@ Examples on how to use libansnd are in the Examples directory; there are six in 
 Each active voice takes some time to process, and the resampling algorithm is quite costly. 
 Not every voice can be played simultaneously while resampling.
 Upsampling is cheaper, and downsampling gets more expensive as the frequency ratio gets larger.
-To avoid resampling, use the base sample rate of ANSND_DSP_DEFAULT_FREQ (~48 kHz) and a pitch of 1.0.
+To avoid resampling, use a pitch of 1.0 the base sample rate of 48 kHz or 32 kHz depending on what mode the library was initialized with.
 
 Voice processing and user callbacks are handled sequentially; 
 as such, it is advised that user callback functions are returned from as quickly as possible.

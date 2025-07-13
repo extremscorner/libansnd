@@ -10,10 +10,10 @@
 #include <ansndlib.h>
 #include "Canon.h"
 
-#define SOUND_BUFFER_SIZE 4096
+#define SOUND_BUFFER_SIZE 5120
 #define SOUND_BUFFERS     2
 
-static u8* sound_buffer[SOUND_BUFFERS][SOUND_BUFFER_SIZE] ATTRIBUTE_ALIGN(32);
+static u8 sound_buffer[SOUND_BUFFERS][SOUND_BUFFER_SIZE] ATTRIBUTE_ALIGN(32);
 static u32 bytes_available[SOUND_BUFFERS];
 static u8  next_buffer = 0;
 

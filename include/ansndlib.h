@@ -54,22 +54,37 @@
  * @brief The maximum number of voices available for allocation
  * @ingroup voices
  */
-#define ANSND_MAX_VOICES           48
+#define ANSND_MAX_VOICES              48
 
 #if defined(HW_DOL)
-	#define ANSND_DSP_DEFAULT_FREQ (54000000.0f/1124.0f) // ~48043
+	#define ANSND_DSP_FREQ_32KHZ      (54000000.0f/1686.0f) // ~32028
+	#define ANSND_DSP_FREQ_48KHZ      (54000000.0f/1124.0f) // ~48043
 #elif defined(HW_RVL)
-	#define ANSND_DSP_DEFAULT_FREQ (54000000.0f/1125.0f) // 48000
+	#define ANSND_DSP_FREQ_32KHZ      (54000000.0f/1687.5f) // 32000
+	#define ANSND_DSP_FREQ_48KHZ      (54000000.0f/1125.0f) // 48000
 #else
 #error "Neither HW_DOL nor HW_RVL are defined"
 #endif
 
 /**
  * @brief The maximum input sample rate supported.
- * 192000 on Wii and ~192170 on GameCube.
+ * 128000 on Wii and ~128114 on GameCube at 32 kHz.
+ * 192000 on Wii and ~192171 on GameCube at 48 kHz.
  * @ingroup voices
  */
-#define ANSND_MAX_SAMPLERATE       (ANSND_DSP_DEFAULT_FREQ * 4)
+#define ANSND_MAX_SAMPLERATE_32KHZ    (ANSND_DSP_FREQ_32KHZ * 4)
+#define ANSND_MAX_SAMPLERATE_48KHZ    (ANSND_DSP_FREQ_48KHZ * 4)
+
+/**
+ * @defgroup output_samplerates Output Samplerates
+ * @brief Output Samplerates
+ * @ingroup non-voices
+ * @addtogroup output_samplerates
+ * @{
+ */
+#define ANSND_OUTPUT_SAMPLERATE_32KHZ          0 ///< Output Samplerate of 32 kHz
+#define ANSND_OUTPUT_SAMPLERATE_48KHZ          1 ///< Output Samplerate of 48 kHz
+/** @} */
 
 /**
  * @defgroup voice_states Voice States
@@ -165,7 +180,8 @@ typedef struct ansnd_pcm_data_buffer_t {
  * This is the function pointer type for a voice to request more data for streaming a PCM voice. 
  * 
  * @note
- * data_buffer must be set with at least 2 milliseconds worth of data, 
+ * data_buffer must be set with at least 5 milliseconds worth of data at 48 kHz output or
+ * 7.5 milliseconds worth of data at 32 kHz output, 
  * otherwise the voice may finish before more data can be requested.
  * 
  * A PCM stream data callback has the following signature:
@@ -203,10 +219,12 @@ typedef struct ansnd_pcm_voice_config_t {
 	 * @brief The pitch for the input to be played at, default is 1.0.
 	 * @note
 	 * This manipulates the input samplerate to change pitch.  
-	 * Samplerates above @ref ANSND_MAX_SAMPLERATE are not supported.  
+	 * Samplerates above @ref ANSND_MAX_SAMPLERATE_32KHZ are not supported in 32 kHz mode.  
+	 * Samplerates above @ref ANSND_MAX_SAMPLERATE_48KHZ are not supported in 48 kHz mode.  
 	 * Ensure that
 	 * @code
-	 * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE
+	 * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_32KHZ or
+	 * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_48KHZ
 	 * @endcode
 	 */
 	f32 pitch;
@@ -249,7 +267,8 @@ typedef struct ansnd_adpcm_data_buffer_t {
  * This is the function pointer type for a voice to request more data for streaming an ADPCM voice. 
  * 
  * @note
- * data_buffer must be set with at least 2 milliseconds worth of data, 
+ * data_buffer must be set with at least 5 milliseconds worth of data at 48 kHz output or
+ * 7.5 milliseconds worth of data at 32 kHz output, 
  * otherwise the voice may finish before more data can be requested.
  * 
  * An ADPCM stream data callback has the following signature:
@@ -295,10 +314,12 @@ typedef struct ansnd_adpcm_voice_config_t {
 	 * @brief The pitch for the input to be played at, default is 1.0.
 	 * @note
 	 * This manipulates the input samplerate to change pitch.  
-	 * Samplerates above @ref ANSND_MAX_SAMPLERATE are not supported.  
+	 * Samplerates above @ref ANSND_MAX_SAMPLERATE_32KHZ are not supported in 32 kHz mode.  
+	 * Samplerates above @ref ANSND_MAX_SAMPLERATE_48KHZ are not supported in 48 kHz mode.  
 	 * Ensure that
 	 * @code
-	 * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE
+	 * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_32KHZ or
+	 * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_48KHZ
 	 * @endcode
 	 */
 	f32 pitch;
@@ -329,13 +350,26 @@ typedef struct ansnd_adpcm_voice_config_t {
 } ansnd_adpcm_voice_config_t;
 
 /**
- * @brief Initializes the library.
+ * @brief Initializes the library with an output samplerate of 48 kHz.
  * 
  * This function must be called before any other ansndlib functions can be used.
  * 
  * @ingroup non-voices
  */
 void ansnd_initialize();
+
+/**
+ * @brief Initializes the library with a specified output samplerate.
+ * 
+ * This function must be called before any other ansndlib functions can be used.
+ * 
+ * @param[in] output_samplerate The [Output Samplerate](@ref output_samplerates) of the library.
+ * 
+ * @return May return @ref ANSND_ERROR_INVALID_INPUT.
+ * 
+ * @ingroup non-voices
+ */
+s32 ansnd_initialize_samplerate(u8 output_samplerate);
 
 /**
  * @brief Uninitializes the library.
@@ -562,10 +596,12 @@ s32 ansnd_set_voice_volume(u32 voice_id, f32 left_volume, f32 right_volume);
  * 
  * @note
  * This manipulates the input samplerate to change pitch.  
- * Samplerates above @ref ANSND_MAX_SAMPLERATE are not supported.  
+ * Samplerates above @ref ANSND_MAX_SAMPLERATE_32KHZ are not supported in 32 kHz mode.  
+ * Samplerates above @ref ANSND_MAX_SAMPLERATE_48KHZ are not supported in 48 kHz mode.  
  * Ensure that
  * @code
- * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE
+ * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_32KHZ or
+ * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_48KHZ
  * @endcode
  * 
  * @param[in] voice_id The ID of the voice.
@@ -585,7 +621,7 @@ s32 ansnd_set_voice_pitch(u32 voice_id, f32 pitch);
 /**
  * @brief Gets the DSP processing time.
  * 
- * The DSP processing time is the time taken by the DSP to process voices in one 2 millisecond cycle.
+ * The DSP processing time is the time taken by the DSP to process voices in one cycle.
  * 
  * @param[out] dsp_usage The time used by the DSP expressed as a percentage in the range 0.0f - 1.0f, may be NULL.
  * 
@@ -599,7 +635,7 @@ s32 ansnd_get_dsp_usage_percent(f32* dsp_usage);
 /**
  * @brief Gets the total processing time.
  * 
- * The total processing time is the time taken to process everything in one 2 millisecond cycle.
+ * The total processing time is the time taken to process everything in one cycle.
  * This includes the DSP processing time and time taken in user callbacks.
  * 
  * @param[out] total_usage The total time used expressed as a percentage in the range 0.0f - 1.0f, may be NULL.
