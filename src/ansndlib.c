@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <math.h>
 #include <ogcsys.h>
 #include <gccore.h>
 #include <ogc/lwp_watchdog.h>
@@ -294,7 +295,7 @@ static void ansnd_update_voice_pitch(ansnd_voice_t* voice) {
 	
 	const u32 base_frequency = 0x00010000;
 	f32 adjusted_samplerate  = voice->samplerate * voice->pitch;
-	u32 relative_frequency   = (u32)((f32)base_frequency * (adjusted_samplerate / dsp_frequency));
+	u32 relative_frequency   = lrintf((f32)base_frequency * (adjusted_samplerate / dsp_frequency));
 	
 	// funnel down samplerates that are very close to base already to avoid resampling
 	if ((relative_frequency > (base_frequency - 0x100)) &&
@@ -312,13 +313,13 @@ static void ansnd_update_voice_pitch(ansnd_voice_t* voice) {
 	u16 filter_step       = 504 << 6;
 	s16 correction_factor = 32767;
 	if (relative_frequency > (base_frequency + 0x0205)) {
-		filter_step       = (u32)((f32)(base_frequency >> 1) * (dsp_frequency / adjusted_samplerate));
+		filter_step       = lrintf((f32)(base_frequency >> 1) * (dsp_frequency / adjusted_samplerate));
 		correction_factor = -256 * (128 - (filter_step >> 8)) + 32767;
 	}
 	parameter_block->filter_step       = filter_step;
 	parameter_block->correction_factor = correction_factor;
 	
-	u16 sample_buffer_size = (u16)(2048.f / (filter_step >> 6));
+	u16 sample_buffer_size = lrintf(2048.f / (filter_step >> 6));
 	parameter_block->sample_buffer_wrapping = sample_buffer_size - 1;
 	parameter_block->sample_buffer_index    = 16 - sample_buffer_size;
 	
