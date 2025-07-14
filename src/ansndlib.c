@@ -888,10 +888,10 @@ s32 ansnd_configure_pcm_voice(u32 voice_id, const ansnd_pcm_voice_config_t* voic
 	if ((voice_config->channels == 0) || (voice_config->channels > 2)) {
 		return ANSND_ERROR_INVALID_CONFIGURATION;
 	}
-	if ((voice_config->left_volume < 0.f) || (voice_config->left_volume > 1.f)) {
+	if ((voice_config->left_volume < -1.f) || (voice_config->left_volume > 1.f)) {
 		return ANSND_ERROR_INVALID_CONFIGURATION;
 	}
-	if ((voice_config->right_volume < 0.f) || (voice_config->right_volume > 1.f)) {
+	if ((voice_config->right_volume < -1.f) || (voice_config->right_volume > 1.f)) {
 		return ANSND_ERROR_INVALID_CONFIGURATION;
 	}
 	if ((voice_config->loop_start_offset > voice_config->frame_count) ||
@@ -1009,10 +1009,10 @@ s32 ansnd_configure_adpcm_voice(u32 voice_id, const ansnd_adpcm_voice_config_t* 
 			return ANSND_ERROR_INVALID_MEMORY;
 		}
 	#endif
-	if ((voice_config->left_volume < 0.f) || (voice_config->left_volume > 1.f)) {
+	if ((voice_config->left_volume < -1.f) || (voice_config->left_volume > 1.f)) {
 		return ANSND_ERROR_INVALID_CONFIGURATION;
 	}
-	if ((voice_config->right_volume < 0.f) || (voice_config->right_volume > 1.f)) {
+	if ((voice_config->right_volume < -1.f) || (voice_config->right_volume > 1.f)) {
 		return ANSND_ERROR_INVALID_CONFIGURATION;
 	}
 	
@@ -1382,10 +1382,10 @@ s32 ansnd_set_voice_volume(u32 voice_id, f32 left_volume, f32 right_volume) {
 	if (!(ansnd_voices[voice_id].flags & VOICE_FLAG_CONFIGURED)) {
 		return ANSND_ERROR_VOICE_NOT_CONFIGURED;
 	}
-	if ((left_volume < 0.f) || (left_volume > 1.f)) {
+	if ((left_volume < -1.f) || (left_volume > 1.f)) {
 		return ANSND_ERROR_INVALID_INPUT;
 	}
-	if ((right_volume < 0.f) || (right_volume > 1.f)) {
+	if ((right_volume < -1.f) || (right_volume > 1.f)) {
 		return ANSND_ERROR_INVALID_INPUT;
 	}
 	
