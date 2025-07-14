@@ -229,8 +229,8 @@ typedef struct ansnd_pcm_voice_config_t {
 	 */
 	f32 pitch;
 	
-	f32 left_volume;       ///< Left volume, valid between 0.0 and 1.0.
-	f32 right_volume;      ///< Right volume, valid between 0.0 and 1.0.
+	f32 left_volume;       ///< Left volume, valid between -1.0 and 1.0.
+	f32 right_volume;      ///< Right volume, valid between -1.0 and 1.0.
 	
 	u32 frame_data_ptr;    ///< The pointer to the start of the data.
 	u32 frame_count;       ///< The number of frames in the buffer.
@@ -324,8 +324,8 @@ typedef struct ansnd_adpcm_voice_config_t {
 	 */
 	f32 pitch;
 	
-	f32 left_volume;              ///< Left volume, valid between 0.0 and 1.0.
-	f32 right_volume;             ///< Right volume, valid between 0.0 and 1.0.
+	f32 left_volume;              ///< Left volume, valid between -1.0 and 1.0.
+	f32 right_volume;             ///< Right volume, valid between -1.0 and 1.0.
 	
 	u32 data_ptr;                 ///< The pointer to the start of the data.
 	u32 sample_count;             ///< The number of samples in the buffer.
@@ -579,8 +579,8 @@ s32 ansnd_stop_looping(u32 voice_id);
  * @brief Sets the volume of a voice.
  * 
  * @param[in] voice_id     The ID of the voice.
- * @param[in] left_volume  The new left volume of the voice, valid between 0.0 and 1.0.
- * @param[in] right_volume The new right volume of the voice, valid between 0.0 and 1.0.
+ * @param[in] left_volume  The new left volume of the voice, valid between -1.0 and 1.0.
+ * @param[in] right_volume The new right volume of the voice, valid between -1.0 and 1.0.
  * 
  * @return May return @ref ANSND_ERROR_NOT_INITIALIZED.
  * @return May return @ref ANSND_ERROR_INVALID_INPUT.
