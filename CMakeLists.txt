@@ -27,6 +27,10 @@ add_library(ansnd STATIC
 	dspmixer.h
 )
 
+target_compile_options(ansnd PRIVATE
+	-fno-math-errno
+)
+
 target_include_directories(ansnd PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 	${CMAKE_CURRENT_BINARY_DIR}

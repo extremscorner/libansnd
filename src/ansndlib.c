@@ -365,8 +365,8 @@ static void ansnd_initialize_voice(ansnd_voice_t* voice) {
 		ansnd_update_voice_delay(voice);
 	}
 	
-	parameter_block->left_volume  = (s16)(0x7FFF * voice->left_volume);
-	parameter_block->right_volume = (s16)(0x7FFF * voice->right_volume);
+	parameter_block->left_volume  = lrintf(0x7FFF * voice->left_volume);
+	parameter_block->right_volume = lrintf(0x7FFF * voice->right_volume);
 	
 	u16 mask = 
 		VOICE_FLAG_USED      | 
@@ -478,8 +478,8 @@ static void ansnd_sync_voice(ansnd_voice_t* voice) {
 		}
 	}
 	
-	parameter_block->left_volume  = (s16)(0x7FFF * voice->left_volume);
-	parameter_block->right_volume = (s16)(0x7FFF * voice->right_volume);
+	parameter_block->left_volume  = lrintf(0x7FFF * voice->left_volume);
+	parameter_block->right_volume = lrintf(0x7FFF * voice->right_volume);
 	
 	voice->flags &= ~VOICE_FLAG_UPDATED;
 	
