@@ -520,14 +520,16 @@ static void ansnd_fill_stream_buffers(ansnd_voice_t* voice) {
 			(data_buffer.sample_count == 0)) {
 			return;
 		}
+	#if defined(HW_DOL)
+		if ((data_buffer.data_ptr < AR_GetBaseAddress()) ||
+			(data_buffer.data_ptr >= AR_GetSize())) {
+			return;
+		}
+	#elif defined(HW_RVL)
 		if (data_buffer.data_ptr & SYS_BASE_CACHED) {
 			return;
 		}
-		#if defined(HW_DOL)
-			if (data_buffer.data_ptr < AR_GetBaseAddress()) {
-				return;
-			}
-		#endif
+	#endif
 		
 		voice->streaming.next_buffer_start = data_buffer.data_ptr << 1;
 		voice->streaming.next_buffer_end   = voice->streaming.next_buffer_start + SAMPLES_TO_NIBBLES(data_buffer.sample_count);
@@ -546,14 +548,16 @@ static void ansnd_fill_stream_buffers(ansnd_voice_t* voice) {
 			(data_buffer.frame_count == 0)) {
 			return;
 		}
+	#if defined(HW_DOL)
+		if ((data_buffer.frame_data_ptr < AR_GetBaseAddress()) ||
+			(data_buffer.frame_data_ptr >= AR_GetSize())) {
+			return;
+		}
+	#elif defined(HW_RVL)
 		if (data_buffer.frame_data_ptr & SYS_BASE_CACHED) {
 			return;
 		}
-		#if defined(HW_DOL)
-			if (data_buffer.frame_data_ptr < AR_GetBaseAddress()) {
-				return;
-			}
-		#endif
+	#endif
 		
 		u32 channels   = 1;
 		if (voice->flags & VOICE_FLAG_STEREO) {
@@ -873,14 +877,16 @@ s32 ansnd_configure_pcm_voice(u32 voice_id, const ansnd_pcm_voice_config_t* voic
 		(voice_config->frame_count == 0)) {
 		return ANSND_ERROR_INVALID_MEMORY;
 	}
+#if defined(HW_DOL)
+	if ((voice_config->frame_data_ptr < AR_GetBaseAddress()) ||
+		(voice_config->frame_data_ptr >= AR_GetSize())) {
+		return ANSND_ERROR_INVALID_MEMORY;
+	}
+#elif defined(HW_RVL)
 	if (voice_config->frame_data_ptr & SYS_BASE_CACHED) {
 		return ANSND_ERROR_INVALID_MEMORY;
 	}
-	#if defined(HW_DOL)
-		if (voice_config->frame_data_ptr < AR_GetBaseAddress()) {
-			return ANSND_ERROR_INVALID_MEMORY;
-		}
-	#endif
+#endif
 	if ((voice_config->format == ANSND_VOICE_PCM_FORMAT_UNSET) ||
 		(voice_config->format > ANSND_VOICE_PCM_FORMAT_SIGNED_16_PCM)) {
 		return ANSND_ERROR_INVALID_CONFIGURATION;
@@ -1001,14 +1007,16 @@ s32 ansnd_configure_adpcm_voice(u32 voice_id, const ansnd_adpcm_voice_config_t* 
 		(voice_config->sample_count == 0)) {
 		return ANSND_ERROR_INVALID_MEMORY;
 	}
+#if defined(HW_DOL)
+	if ((voice_config->data_ptr < AR_GetBaseAddress()) ||
+		(voice_config->data_ptr >= AR_GetSize())) {
+		return ANSND_ERROR_INVALID_MEMORY;
+	}
+#elif defined(HW_RVL)
 	if (voice_config->data_ptr & SYS_BASE_CACHED) {
 		return ANSND_ERROR_INVALID_MEMORY;
 	}
-	#if defined(HW_DOL)
-		if (voice_config->data_ptr < AR_GetBaseAddress()) {
-			return ANSND_ERROR_INVALID_MEMORY;
-		}
-	#endif
+#endif
 	if ((voice_config->left_volume < -1.f) || (voice_config->left_volume > 1.f)) {
 		return ANSND_ERROR_INVALID_CONFIGURATION;
 	}
