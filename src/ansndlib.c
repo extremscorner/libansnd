@@ -287,6 +287,11 @@ static void ansnd_update_voice_pitch(ansnd_voice_t* voice) {
 	case ANSND_OUTPUT_SAMPLERATE_48KHZ:
 		dsp_frequency = ANSND_DSP_FREQ_48KHZ;
 		break;
+#if defined(HW_DOL)
+	case ANSND_OUTPUT_SAMPLERATE_96KHZ:
+		dsp_frequency = ANSND_DSP_FREQ_96KHZ;
+		break;
+#endif
 	default:
 		break;
 	}
@@ -332,6 +337,12 @@ static void ansnd_update_voice_delay(ansnd_voice_t* voice) {
 		dsp_frequency = ANSND_DSP_FREQ_48KHZ;
 		microseconds_per_cycle = 5000;
 		break;
+#if defined(HW_DOL)
+	case ANSND_OUTPUT_SAMPLERATE_96KHZ:
+		dsp_frequency = ANSND_DSP_FREQ_96KHZ;
+		microseconds_per_cycle = 2500;
+		break;
+#endif
 	default:
 		break;
 	}
@@ -710,6 +721,11 @@ s32 ansnd_initialize_samplerate(u8 output_samplerate) {
 	case ANSND_OUTPUT_SAMPLERATE_48KHZ:
 		ai_rate = AI_SAMPLERATE_48KHZ;
 		break;
+#if defined(HW_DOL)
+	case ANSND_OUTPUT_SAMPLERATE_96KHZ:
+		ai_rate = AI_SAMPLERATE_96KHZ;
+		break;
+#endif
 	default:
 		return ANSND_ERROR_INVALID_INPUT;
 	}
@@ -863,6 +879,11 @@ s32 ansnd_configure_pcm_voice(u32 voice_id, const ansnd_pcm_voice_config_t* voic
 	case ANSND_OUTPUT_SAMPLERATE_48KHZ:
 		max_samplerate = ANSND_MAX_SAMPLERATE_48KHZ;
 		break;
+#if defined(HW_DOL)
+	case ANSND_OUTPUT_SAMPLERATE_96KHZ:
+		max_samplerate = ANSND_MAX_SAMPLERATE_96KHZ;
+		break;
+#endif
 	default:
 		break;
 	}
@@ -993,6 +1014,11 @@ s32 ansnd_configure_adpcm_voice(u32 voice_id, const ansnd_adpcm_voice_config_t* 
 	case ANSND_OUTPUT_SAMPLERATE_48KHZ:
 		max_samplerate = ANSND_MAX_SAMPLERATE_48KHZ;
 		break;
+#if defined(HW_DOL)
+	case ANSND_OUTPUT_SAMPLERATE_96KHZ:
+		max_samplerate = ANSND_MAX_SAMPLERATE_96KHZ;
+		break;
+#endif
 	default:
 		break;
 	}
@@ -1438,6 +1464,11 @@ s32 ansnd_set_voice_pitch(u32 voice_id, f32 pitch) {
 	case ANSND_OUTPUT_SAMPLERATE_48KHZ:
 		max_samplerate = ANSND_MAX_SAMPLERATE_48KHZ;
 		break;
+#if defined(HW_DOL)
+	case ANSND_OUTPUT_SAMPLERATE_96KHZ:
+		max_samplerate = ANSND_MAX_SAMPLERATE_96KHZ;
+		break;
+#endif
 	default:
 		break;
 	}
@@ -1485,6 +1516,11 @@ s32 ansnd_get_dsp_usage_percent(f32* dsp_usage) {
 	case ANSND_OUTPUT_SAMPLERATE_48KHZ:
 		microseconds_per_cycle = 5000.f;
 		break;
+#if defined(HW_DOL)
+	case ANSND_OUTPUT_SAMPLERATE_96KHZ:
+		microseconds_per_cycle = 2500.f;
+		break;
+#endif
 	default:
 		break;
 	}
@@ -1518,6 +1554,11 @@ s32 ansnd_get_total_usage_percent(f32* total_usage) {
 	case ANSND_OUTPUT_SAMPLERATE_48KHZ:
 		microseconds_per_cycle = 5000.f;
 		break;
+#if defined(HW_DOL)
+	case ANSND_OUTPUT_SAMPLERATE_96KHZ:
+		microseconds_per_cycle = 2500.f;
+		break;
+#endif
 	default:
 		break;
 	}
