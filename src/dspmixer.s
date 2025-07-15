@@ -84,6 +84,7 @@ CMD_VOICE_NEXT:        equ 0x1111 // Voice command process next set of data
 CMD_VOICE_PREPARE:     equ 0x2222 // Voice command prepare for next cycle
 CMD_VOICE_MM_LOCATION: equ 0x3333 // Voice command receive main memory base locations
 CMD_VOICE_RESTART:     equ 0x4444 // Voice command restart dsp processing cycle
+CMD_VOICE_YIELD:       equ 0x5555 // Voice command dsp yield to next task
 
 // Accelerator formats
 ACCL_FMT_U8BIT:        equ 0x0005 // Accelerator format U8 bit
@@ -222,6 +223,15 @@ _start:
 	jmp       exception6
 	jmp       exception7
 // ^ Interrupt Table ^
+
+init:
+	lris      $acc0.m, #CMD_SYSTEM_OUT_INIT
+	call      send_system_command
+	jmp       setup
+	
+resume:
+	lris      $acc0.m, #CMD_SYSTEM_OUT_RESUME
+	call      send_system_command
 	
 setup:
 	// configure settings
@@ -230,9 +240,6 @@ setup:
 	clr15
 	s40
 	m2
-	
-	lris      $acc0.m, #CMD_SYSTEM_OUT_INIT
-	call      send_system_command
 	
 	// reset indexing registers
 	clr       $acc0
@@ -272,6 +279,9 @@ wait_command:
 	cmpi      $acc1.m, #CMD_VOICE_RESTART
 	jeq       restart_processing
 	
+	cmpi      $acc1.m, #CMD_VOICE_YIELD
+	jeq       yield_process
+	
 	cmpi      $acc1.m, #CMD_VOICE_MM_LOCATION
 	jeq       recv_mmem_base
 	
@@ -308,6 +318,11 @@ prepare_for_processing:
 
 restart_processing:
 	lris      $acc0.m, #CMD_SYSTEM_OUT_IRQ
+	call      send_system_command
+	jmp       wait_command
+
+yield_process:
+	lris      $acc0.m, #CMD_SYSTEM_OUT_YIELD
 	call      send_system_command
 	jmp       wait_command
 
@@ -926,8 +941,6 @@ run_next_task:
 // $ix1 - Main Memory IRAM base location low
 // $ix2 - DSP IRAM base location
 // $ix3 - DSP IRAM length
-	call      wait_mail_recv
-	mrr       $ar0,    $acc0.l
 	call      wait_mail_recv
 	mrr       $ix0,    $acc0.m
 	mrr       $ix1,    $acc0.l
