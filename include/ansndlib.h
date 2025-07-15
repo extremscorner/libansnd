@@ -59,9 +59,11 @@
 #if defined(HW_DOL)
 	#define ANSND_DSP_FREQ_32KHZ      (54000000.0f/1686.0f) // ~32028
 	#define ANSND_DSP_FREQ_48KHZ      (54000000.0f/1124.0f) // ~48043
+	#define ANSND_DSP_FREQ_96KHZ      (54000000.0f/ 562.0f) // ~96085
 #elif defined(HW_RVL)
 	#define ANSND_DSP_FREQ_32KHZ      (54000000.0f/1687.5f) // 32000
 	#define ANSND_DSP_FREQ_48KHZ      (54000000.0f/1125.0f) // 48000
+	#define ANSND_DSP_FREQ_96KHZ      (0.0f/0.0f)
 #else
 #error "Neither HW_DOL nor HW_RVL are defined"
 #endif
@@ -70,10 +72,12 @@
  * @brief The maximum input sample rate supported.
  * 128000 on Wii and ~128114 on GameCube at 32 kHz.
  * 192000 on Wii and ~192171 on GameCube at 48 kHz.
+ * ~384342 on GameCube at 96 kHz.
  * @ingroup voices
  */
 #define ANSND_MAX_SAMPLERATE_32KHZ    (ANSND_DSP_FREQ_32KHZ * 4)
 #define ANSND_MAX_SAMPLERATE_48KHZ    (ANSND_DSP_FREQ_48KHZ * 4)
+#define ANSND_MAX_SAMPLERATE_96KHZ    (ANSND_DSP_FREQ_96KHZ * 4)
 
 /**
  * @defgroup output_samplerates Output Samplerates
@@ -84,6 +88,7 @@
  */
 #define ANSND_OUTPUT_SAMPLERATE_32KHZ          0 ///< Output Samplerate of 32 kHz
 #define ANSND_OUTPUT_SAMPLERATE_48KHZ          1 ///< Output Samplerate of 48 kHz
+#define ANSND_OUTPUT_SAMPLERATE_96KHZ          2 ///< Output Samplerate of 96 kHz
 /** @} */
 
 /**
@@ -221,10 +226,12 @@ typedef struct ansnd_pcm_voice_config_t {
 	 * This manipulates the input samplerate to change pitch.  
 	 * Samplerates above @ref ANSND_MAX_SAMPLERATE_32KHZ are not supported in 32 kHz mode.  
 	 * Samplerates above @ref ANSND_MAX_SAMPLERATE_48KHZ are not supported in 48 kHz mode.  
+	 * Samplerates above @ref ANSND_MAX_SAMPLERATE_96KHZ are not supported in 96 kHz mode.  
 	 * Ensure that
 	 * @code
 	 * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_32KHZ or
-	 * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_48KHZ
+	 * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_48KHZ or
+	 * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_96KHZ
 	 * @endcode
 	 */
 	f32 pitch;
@@ -316,10 +323,12 @@ typedef struct ansnd_adpcm_voice_config_t {
 	 * This manipulates the input samplerate to change pitch.  
 	 * Samplerates above @ref ANSND_MAX_SAMPLERATE_32KHZ are not supported in 32 kHz mode.  
 	 * Samplerates above @ref ANSND_MAX_SAMPLERATE_48KHZ are not supported in 48 kHz mode.  
+	 * Samplerates above @ref ANSND_MAX_SAMPLERATE_96KHZ are not supported in 96 kHz mode.  
 	 * Ensure that
 	 * @code
 	 * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_32KHZ or
-	 * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_48KHZ
+	 * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_48KHZ or
+	 * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_96KHZ
 	 * @endcode
 	 */
 	f32 pitch;
@@ -597,10 +606,12 @@ s32 ansnd_set_voice_volume(u32 voice_id, f32 left_volume, f32 right_volume);
  * This manipulates the input samplerate to change pitch.  
  * Samplerates above @ref ANSND_MAX_SAMPLERATE_32KHZ are not supported in 32 kHz mode.  
  * Samplerates above @ref ANSND_MAX_SAMPLERATE_48KHZ are not supported in 48 kHz mode.  
+ * Samplerates above @ref ANSND_MAX_SAMPLERATE_96KHZ are not supported in 96 kHz mode.  
  * Ensure that
  * @code
  * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_32KHZ or
- * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_48KHZ
+ * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_48KHZ or
+ * (pitch * samplerate) <= ANSND_MAX_SAMPLERATE_96KHZ
  * @endcode
  * 
  * @param[in] voice_id The ID of the voice.

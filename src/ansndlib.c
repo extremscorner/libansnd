@@ -260,6 +260,11 @@ static f32 get_dsp_frequency()
 	case ANSND_OUTPUT_SAMPLERATE_48KHZ:
 		dsp_frequency = ANSND_DSP_FREQ_48KHZ;
 		break;
+#if defined(HW_DOL)
+	case ANSND_OUTPUT_SAMPLERATE_96KHZ:
+		dsp_frequency = ANSND_DSP_FREQ_96KHZ;
+		break;
+#endif
 	default:
 		break;
 	}
@@ -276,6 +281,11 @@ static u32 get_microseconds_per_cycle()
 	case ANSND_OUTPUT_SAMPLERATE_48KHZ:
 		microseconds_per_cycle = 5000;
 		break;
+#if defined(HW_DOL)
+	case ANSND_OUTPUT_SAMPLERATE_96KHZ:
+		microseconds_per_cycle = 2500;
+		break;
+#endif
 	default:
 		break;
 	}
@@ -292,6 +302,11 @@ static f32 get_max_samplerate()
 	case ANSND_OUTPUT_SAMPLERATE_48KHZ:
 		max_samplerate = ANSND_MAX_SAMPLERATE_48KHZ;
 		break;
+#if defined(HW_DOL)
+	case ANSND_OUTPUT_SAMPLERATE_96KHZ:
+		max_samplerate = ANSND_MAX_SAMPLERATE_96KHZ;
+		break;
+#endif
 	default:
 		break;
 	}
@@ -772,6 +787,11 @@ s32 ansnd_initialize_samplerate(u8 output_samplerate) {
 	case ANSND_OUTPUT_SAMPLERATE_48KHZ:
 		ai_rate = AI_SAMPLERATE_48KHZ;
 		break;
+#if defined(HW_DOL)
+	case ANSND_OUTPUT_SAMPLERATE_96KHZ:
+		ai_rate = AI_SAMPLERATE_96KHZ;
+		break;
+#endif
 	default:
 		return ANSND_ERROR_INVALID_INPUT;
 	}
