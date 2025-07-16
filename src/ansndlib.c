@@ -31,7 +31,7 @@
 #include <math.h>
 #include <ogcsys.h>
 #include <gccore.h>
-#include <ogc/timesupp.h>
+#include <ogc/lwp_watchdog.h>
 #include <ogc/machine/processor.h>
 
 #include "ansndlib.h"

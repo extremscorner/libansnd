@@ -447,12 +447,12 @@ resample_read_loop_end:
 	// load first resampling coefficient
 	// load the correction factor
 	// increment $ar3 to the start of the resampling coefficient buffer (pad 1)
-	movr'ldaxn    $acc1,   $acx0.h        : $acx1,   @$ar0
+	cw        0x65D7 // movr'ldaxn $acc1, $acx0.h : $acx1, @$ar0
 	
 	// partially unroll the loop to reduce instructions inside
 	mul       $acx1.l, $acx1.h
 	bloop     $acx0.l, resample_coefficients_loop_end
-	subp'lsn  $acc1                       : $acx1.h, $acc0.m
+	cw            0x5FB4 // subp'lsn $acc1 : $acx1.h, $acc0.m
 resample_coefficients_loop_end:
 	mulmv         $acx1.l, $acx1.h, $acc0
 	
@@ -466,11 +466,11 @@ resample_coefficients_loop_end:
 	
 	clrp
 	// partially unroll the loop to reduce instructions inside
-	clr'ldax  $acc1                                  : $acx1,   @$ar1
+	cw        0x89F3 // clr'ldax $acc1               : $acx1,   @$ar1
 	bloop     $acx0.l, resample_samples_loop_end
 	mulac'l       $acx1.l, $acx1.h, $acc1            : $acx1.h, @$ar2
 resample_samples_loop_end:
-	mulac'ldax    $acx1.l, $acx1.h, $acc0            : $acx1,   @$ar1
+	cw            0x9CF3 // mulac'ldax $acx1.l, $acx1.h, $acc0 : $acx1, @$ar1
 	
 	nx'l                                             : $acx1.h, @$ar3 // error factor
 	mulcac'dr $acc0.m, $acx1.h, $acc1                : $ar1
