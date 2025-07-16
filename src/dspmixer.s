@@ -84,7 +84,6 @@ CMD_VOICE_NEXT:        equ 0x1111 // Voice command process next set of data
 CMD_VOICE_PREPARE:     equ 0x2222 // Voice command prepare for next cycle
 CMD_VOICE_MM_LOCATION: equ 0x3333 // Voice command receive main memory base locations
 CMD_VOICE_RESTART:     equ 0x4444 // Voice command restart dsp processing cycle
-CMD_VOICE_YIELD:       equ 0x5555 // Voice command dsp yield to next task
 
 // Accelerator formats
 ACCL_FMT_U8BIT:        equ 0x0005 // Accelerator format U8 bit
@@ -279,9 +278,6 @@ wait_command:
 	cmpi      $acc1.m, #CMD_VOICE_RESTART
 	jeq       restart_processing
 	
-	cmpi      $acc1.m, #CMD_VOICE_YIELD
-	jeq       yield_process
-	
 	cmpi      $acc1.m, #CMD_VOICE_MM_LOCATION
 	jeq       recv_mmem_base
 	
@@ -314,15 +310,13 @@ prepare_for_processing:
 	si        @DMACR,  #(DMA_DMEM | DMA_TO_DSP)
 	call      init_pb_dma
 	call      dma
+	
+	lris      $acc0.m, #CMD_SYSTEM_OUT_YIELD
+	call      send_system_command
 	jmp       wait_command
 
 restart_processing:
 	lris      $acc0.m, #CMD_SYSTEM_OUT_IRQ
-	call      send_system_command
-	jmp       wait_command
-
-yield_process:
-	lris      $acc0.m, #CMD_SYSTEM_OUT_YIELD
 	call      send_system_command
 	jmp       wait_command
 
