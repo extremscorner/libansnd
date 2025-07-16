@@ -64,7 +64,6 @@
 #define DSP_MAIL_PREPARE            0x00002222 // dsp prepare for next cycle
 #define DSP_MAIL_MM_LOCATION        0x00003333 // cpu send main memory base locations
 #define DSP_MAIL_RESTART            0x00004444 // dsp restart processing cycle
-#define DSP_MAIL_YIELD              0x00005555 // dsp yield to next task
 
 // Voice flags
 
@@ -241,6 +240,7 @@ static bool ansnd_library_initialized = false;
 
 static bool ansnd_dsp_done_mixing     = false;
 static bool ansnd_dsp_stalled         = false;
+static bool ansnd_dsp_yielding        = false;
 
 static u32 ansnd_active_voices        = 0;
 static u64 ansnd_dsp_start_time       = 0;
@@ -253,7 +253,6 @@ static ansnd_voice_t ansnd_voices[ANSND_MAX_VOICES];
 // forward declarations for ansnd_load_dsp_task()
 static void ansnd_dsp_initialized_callback(dsptask_t* task);
 static void ansnd_dsp_resume_callback(dsptask_t* task);
-static void ansnd_dsp_done_callback(dsptask_t* task);
 static void ansnd_dsp_request_callback(dsptask_t* task);
 
 static void ansnd_load_dsp_task() {
@@ -268,7 +267,6 @@ static void ansnd_load_dsp_task() {
 	ansnd_dsp_task.resume_vec = 0x0015;
 	ansnd_dsp_task.init_cb    = ansnd_dsp_initialized_callback;
 	ansnd_dsp_task.res_cb     = ansnd_dsp_resume_callback;
-	ansnd_dsp_task.done_cb    = ansnd_dsp_done_callback;
 	ansnd_dsp_task.req_cb     = ansnd_dsp_request_callback;
 	DSP_AddTask(&ansnd_dsp_task);
 }
@@ -608,11 +606,13 @@ static void ansnd_dsp_initialized_callback(dsptask_t* task) {
 }
 
 static void ansnd_dsp_resume_callback(dsptask_t* task) {
-	DSP_SendMailTo(DSP_MAIL_COMMAND | DSP_MAIL_NEXT);
-	while(DSP_CheckMailTo());
+	ansnd_dsp_yielding = false;
+	
+	if (!ansnd_dsp_done_mixing) {
+		DSP_SendMailTo(DSP_MAIL_COMMAND | DSP_MAIL_NEXT);
+		while(DSP_CheckMailTo());
+	}
 }
-
-static void ansnd_dsp_done_callback(dsptask_t* task) {}
 
 static void ansnd_dsp_request_callback(dsptask_t* task) {
 	ansnd_dsp_done_mixing = true;
@@ -651,8 +651,10 @@ static void ansnd_dsp_request_callback(dsptask_t* task) {
 	
 	DCFlushRange(parameter_block_base, PARAMETER_BLOCK_STRUCT_SIZE * MAX_PARAMETER_BLOCKS);
 	
-	DSP_SendMailTo(DSP_MAIL_COMMAND | ((ansnd_dsp_task.next != NULL)? DSP_MAIL_YIELD : DSP_MAIL_PREPARE));
+	DSP_SendMailTo(DSP_MAIL_COMMAND | DSP_MAIL_PREPARE);
 	while(DSP_CheckMailTo());
+	
+	ansnd_dsp_yielding = true;
 	
 	if (ansnd_audio_callback) {
 		DCInvalidateRange(ansnd_audio_buffer_out[ansnd_next_audio_buffer], ANSND_SOUND_BUFFER_SIZE);
@@ -664,18 +666,16 @@ static void ansnd_dsp_request_callback(dsptask_t* task) {
 }
 
 static void ansnd_audio_dma_callback() {
-	if (ansnd_dsp_task.next != NULL) {
-		DSP_AssertTask(&ansnd_dsp_task);
-	}
-	
 	if (!ansnd_dsp_done_mixing) {
 		AUDIO_InitDMA((u32)ansnd_mute_buffer_out, ANSND_SOUND_BUFFER_SIZE);
 		
-		if (ansnd_dsp_stalled && (ansnd_dsp_task.state == DSPTASK_RUN)) {
+		if (ansnd_dsp_stalled && !ansnd_dsp_yielding) {
 			DSP_SendMailTo(DSP_MAIL_COMMAND | DSP_MAIL_RESTART);
+		} else {
+			// if the task is already running, this will prevent us from yielding on the next synchronization point
+			DSP_AssertTask(&ansnd_dsp_task);
 		}
 		ansnd_dsp_stalled = true;
-		
 		return;
 	}
 	
@@ -683,7 +683,9 @@ static void ansnd_audio_dma_callback() {
 	
 	ansnd_total_start_time = gettime();
 	
-	if (ansnd_dsp_task.state == DSPTASK_RUN) {
+	if (ansnd_dsp_yielding) {
+		DSP_AssertTask(&ansnd_dsp_task);
+	} else {
 		DSP_SendMailTo(DSP_MAIL_COMMAND | DSP_MAIL_NEXT);
 		while(DSP_CheckMailTo());
 	}
@@ -730,6 +732,7 @@ s32 ansnd_initialize_samplerate(u8 output_samplerate) {
 		
 		ansnd_dsp_done_mixing = false;
 		ansnd_dsp_stalled     = false;
+		ansnd_dsp_yielding    = false;
 		
 		memset(ansnd_voices, 0, sizeof(ansnd_voice_t) * ANSND_MAX_VOICES);
 		
