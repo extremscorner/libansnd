@@ -608,8 +608,6 @@ static void ansnd_dsp_initialized_callback(dsptask_t* task) {
 }
 
 static void ansnd_dsp_resume_callback(dsptask_t* task) {
-	DSP_SendMailTo(DSP_MAIL_COMMAND | DSP_MAIL_PREPARE);
-	while(DSP_CheckMailTo());
 	DSP_SendMailTo(DSP_MAIL_COMMAND | DSP_MAIL_NEXT);
 	while(DSP_CheckMailTo());
 }
