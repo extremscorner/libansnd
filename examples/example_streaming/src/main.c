@@ -172,6 +172,9 @@ int main(int argc, char** argv) {
 	}
 #endif
 	
+	ov_clear(&vorbis_file);
+	fclose(file);
+	
 	printf("Exiting...\n");
 	
 	// Update the screen one last time
