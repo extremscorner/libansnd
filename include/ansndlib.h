@@ -374,8 +374,7 @@ s32 ansnd_initialize_samplerate(u8 output_samplerate);
 /**
  * @brief Uninitializes the library.
  * 
- * This function should be called before the program exits, 
- * or before some other DSP Task is used.
+ * This function should be called before the program exits.
  * 
  * @ingroup non-voices
  */
