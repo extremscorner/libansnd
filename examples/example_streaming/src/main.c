@@ -298,9 +298,6 @@ static void setup_video() {
 	VIDEO_SetNextFramebuffer(xfb);
 	VIDEO_SetBlack(false);
 	VIDEO_Flush();
-	VIDEO_WaitVSync();
-	if (rmode->viTVMode & VI_NON_INTERLACE) {
-		VIDEO_WaitVSync();
-	}
+	VIDEO_WaitForFlush();
 	printf("\nTerminal Output Initialized\n");
 }

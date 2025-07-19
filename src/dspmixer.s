@@ -429,7 +429,7 @@ resample_read_loop_end:
 	// partially unroll the loop to reduce instructions inside
 	mul       $acx1.l, $acx1.h
 	bloop     $acx0.l, resample_coefficients_loop_end
-	cw            0x5FB4 // subp'lsn $acc1 : $acx1.h, $acc0.m
+	subp'lsn  $acc1                       : $acx1.h, $acc0.m
 resample_coefficients_loop_end:
 	mulmv         $acx1.l, $acx1.h, $acc0
 	
@@ -442,11 +442,11 @@ resample_coefficients_loop_end:
 	lri       $ar3,    #WORK_RESAMPLING_COEF_BUF
 	
 	// partially unroll the loop to reduce instructions inside
-	cw        0x89F3 // clr'ldax $acc1    : $acx1,   @$ar1
+	clr'ldax  $acc1                       : $acx1,   @$ar1
 	bloop     $acx0.l, resample_samples_loop_end
 	mulac'l       $acx1.l, $acx1.h, $acc1 : $acx1.h, @$ar2
 resample_samples_loop_end:
-	cw            0x9CF3 // mulac'ldax $acx1.l, $acx1.h, $acc0 : $acx1, @$ar1
+	mulac'ldax    $acx1.l, $acx1.h, $acc0 : $acx1,   @$ar1
 	
 	lrri      $acx1.h, @$ar3                                 // error factor
 	mulcac'dr $acc0.m, $acx1.h, $acc1     : $ar1
