@@ -385,7 +385,7 @@ void ansnd_uninitialize();
  * 
  * This allocates a voice for use.
  * 
- * @param[in] voice_id The ID of the voice.
+ * @return The ID of the voice on successful allocation.
  * 
  * @return May return @ref ANSND_ERROR_NOT_INITIALIZED.
  * @return May return @ref ANSND_ERROR_ALL_VOICES_USED.
