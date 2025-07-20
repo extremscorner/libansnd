@@ -1481,10 +1481,22 @@ s32 ansnd_get_dsp_usage_percent(f32* dsp_usage) {
 		return ANSND_ERROR_OK;
 	}
 	
+	f32 microseconds_per_cycle = 1.f;
+	switch (ansnd_output_samplerate) {
+	case ANSND_OUTPUT_SAMPLERATE_32KHZ:
+		microseconds_per_cycle = 7500.f;
+		break;
+	case ANSND_OUTPUT_SAMPLERATE_48KHZ:
+		microseconds_per_cycle = 5000.f;
+		break;
+	default:
+		break;
+	}
+	
 	u32 level;
 	_CPU_ISR_Disable(level);
 	
-	*dsp_usage = ticks_to_microsecs(ansnd_dsp_process_time) / 2000.f;
+	*dsp_usage = ticks_to_microsecs(ansnd_dsp_process_time) / microseconds_per_cycle;
 	
 	_CPU_ISR_Restore(level);
 	
@@ -1502,10 +1514,22 @@ s32 ansnd_get_total_usage_percent(f32* total_usage) {
 		return ANSND_ERROR_OK;
 	}
 	
+	f32 microseconds_per_cycle = 1.f;
+	switch (ansnd_output_samplerate) {
+	case ANSND_OUTPUT_SAMPLERATE_32KHZ:
+		microseconds_per_cycle = 7500.f;
+		break;
+	case ANSND_OUTPUT_SAMPLERATE_48KHZ:
+		microseconds_per_cycle = 5000.f;
+		break;
+	default:
+		break;
+	}
+	
 	u32 level;
 	_CPU_ISR_Disable(level);
 	
-	*total_usage = ticks_to_microsecs(ansnd_total_process_time) / 2000.f;
+	*total_usage = ticks_to_microsecs(ansnd_total_process_time) / microseconds_per_cycle;
 	
 	_CPU_ISR_Restore(level);
 	
