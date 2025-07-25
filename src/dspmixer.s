@@ -339,7 +339,7 @@ loop_mix_and_resample:
 // v Parameter Block Section v
 	call      init_parameter_block
 // v Core Loop v
-	lri       $wr0,    #0x01F8
+	lri       $wr0,    #0x01FC
 	bloop     $acc1.m, mixing_complete
 	lr        $ar0,    @WORK_RESAMPLE_FUNCTION
 	jmpr      $ar0
@@ -758,7 +758,7 @@ accelerator_address_overflow_no_loop_or_stream:
 // ^ Voice Finished ^
 	
 accelerator_address_overflow_end:
-	lri       $wr0,    #0x01F8
+	lri       $wr0,    #0x01FC
 	mrr       $acc1.m, $st1
 	mrr       $ar0,    $st1
 	ret

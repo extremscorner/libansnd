@@ -304,20 +304,16 @@ static void ansnd_update_voice_pitch(ansnd_voice_t* voice) {
 	parameter_block->relative_frequency_high = HIGH(relative_frequency);
 	parameter_block->relative_frequency_low  = LOW(relative_frequency);
 	
-	// Frequencies between 0x00010001 and 0x00010204 produce a buzzing sound from
-	// how the resampling algorithm indexes into the reampling coefficient table.
-	// Better to accept whatever aliasing comes from not using the low pass filter for
-	// input sample rates between dsp_frequency and dsp_frequency + 0.789%
-	u16 filter_step       = 504 << 6;
+	u16 filter_step       = 0x7FFF;
 	s16 correction_factor = 32767;
-	if (relative_frequency > (base_frequency + 0x0205)) {
-		filter_step       = lrintf((f32)(base_frequency >> 1) * (dsp_frequency / adjusted_samplerate));
+	if (relative_frequency > base_frequency) {
+		filter_step       = lrintf((f32)base_frequency * (dsp_frequency / adjusted_samplerate) * 0.5f);
 		correction_factor = -256 * (128 - (filter_step >> 8)) + 32767;
 	}
 	parameter_block->filter_step       = filter_step;
 	parameter_block->correction_factor = correction_factor;
 	
-	u16 sample_buffer_size = lrintf(2048.f / (filter_step >> 6));
+	u16 sample_buffer_size = lrintf(131071.f / filter_step);
 	parameter_block->sample_buffer_wrapping = sample_buffer_size - 1;
 	parameter_block->sample_buffer_index    = 16 - sample_buffer_size;
 	
