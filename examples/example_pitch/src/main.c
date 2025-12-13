@@ -72,10 +72,10 @@ int main(int argc, char** argv) {
 	u32 sound_buffer_ptr = AR_Alloc(sound_buffer_size_32);
 	
 	ARQRequest aram_request;
-	ARQ_PostRequest(&aram_request, 0, ARQ_MRAMTOARAM, ARQ_PRIO_HI, sound_buffer_ptr, (u32)MEM_VIRTUAL_TO_PHYSICAL(sound_buffer), sound_buffer_size_32);
+	ARQ_PostRequest(&aram_request, 0, ARQ_MRAMTOARAM, ARQ_PRIO_HI, sound_buffer_ptr, MEM_VIRTUAL_TO_PHYSICAL(sound_buffer), sound_buffer_size_32);
 #elif defined(HW_RVL)
 	// Wii just needs to convert the pointer from virtual to physical
-	u32 sound_buffer_ptr = (u32)MEM_VIRTUAL_TO_PHYSICAL(sound_buffer);
+	u32 sound_buffer_ptr = MEM_VIRTUAL_TO_PHYSICAL(sound_buffer);
 #endif
 	
 	// create a voice config struct
@@ -255,15 +255,12 @@ static void setup_video() {
 	VIDEO_Init();
 	PAD_Init();
 	GXRModeObj* rmode = VIDEO_GetPreferredMode(NULL);
-	xfb = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
-	console_init(xfb,0,0,rmode->fbWidth,rmode->xfbHeight,rmode->fbWidth*VI_DISPLAY_PIX_SZ);
+	xfb = SYS_AllocateFramebuffer(rmode);
+	CON_Init(xfb, 0, 0, rmode->fbWidth, rmode->xfbHeight, rmode->fbWidth * VI_DISPLAY_PIX_SZ);
 	VIDEO_Configure(rmode);
 	VIDEO_SetNextFramebuffer(xfb);
-	VIDEO_SetBlack(FALSE);
+	VIDEO_SetBlack(false);
 	VIDEO_Flush();
-	VIDEO_WaitVSync();
-	if (rmode->viTVMode & VI_NON_INTERLACE) {
-		VIDEO_WaitVSync();
-	}
+	VIDEO_WaitForFlush();
 	printf("\nTerminal Output Initialized\n");
 }

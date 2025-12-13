@@ -39,7 +39,7 @@ static void stream_callback(void* user_pointer, ansnd_pcm_data_buffer_t* data_bu
 	u32 sound_buffer_ptr = aram_blocks[next_buffer];
 #elif defined(HW_RVL)
 	// Wii needs to convert the pointer from virtual to physical
-	u32 sound_buffer_ptr = (u32)MEM_VIRTUAL_TO_PHYSICAL(sound_buffer[next_buffer]);
+	u32 sound_buffer_ptr = MEM_VIRTUAL_TO_PHYSICAL(sound_buffer[next_buffer]);
 #endif
 	
 	data_buffer->frame_data_ptr  = sound_buffer_ptr;
@@ -202,7 +202,7 @@ static s32 reset_data() {
 	u32 sound_buffer_ptr = aram_blocks[next_buffer];
 #elif defined(HW_RVL)
 	// Wii needs to convert the pointer from virtual to physical
-	u32 sound_buffer_ptr = (u32)MEM_VIRTUAL_TO_PHYSICAL(sound_buffer[next_buffer]);
+	u32 sound_buffer_ptr = MEM_VIRTUAL_TO_PHYSICAL(sound_buffer[next_buffer]);
 #endif
 	
 	voice_config.frame_data_ptr  = sound_buffer_ptr;
@@ -242,7 +242,7 @@ static s32 read_data() {
 	#if defined(HW_DOL)
 		// on the GameCube, sound samples need to be transferred to ARAM before they can be used
 		ARQRequest aram_request;
-		ARQ_PostRequest(&aram_request, next_buffer, ARQ_MRAMTOARAM, ARQ_PRIO_HI, aram_blocks[next_buffer], (u32)MEM_VIRTUAL_TO_PHYSICAL(sound_buffer[next_buffer]), total_bytes_read);
+		ARQ_PostRequest(&aram_request, next_buffer, ARQ_MRAMTOARAM, ARQ_PRIO_HI, aram_blocks[next_buffer], MEM_VIRTUAL_TO_PHYSICAL(sound_buffer[next_buffer]), total_bytes_read);
 	#endif
 		
 		bytes_available[next_buffer] = total_bytes_read;
@@ -292,15 +292,12 @@ static void setup_video() {
 	VIDEO_Init();
 	PAD_Init();
 	GXRModeObj* rmode = VIDEO_GetPreferredMode(NULL);
-	xfb = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
-	console_init(xfb,0,0,rmode->fbWidth,rmode->xfbHeight,rmode->fbWidth*VI_DISPLAY_PIX_SZ);
+	xfb = SYS_AllocateFramebuffer(rmode);
+	CON_Init(xfb, 0, 0, rmode->fbWidth, rmode->xfbHeight, rmode->fbWidth * VI_DISPLAY_PIX_SZ);
 	VIDEO_Configure(rmode);
 	VIDEO_SetNextFramebuffer(xfb);
-	VIDEO_SetBlack(FALSE);
+	VIDEO_SetBlack(false);
 	VIDEO_Flush();
-	VIDEO_WaitVSync();
-	if (rmode->viTVMode & VI_NON_INTERLACE) {
-		VIDEO_WaitVSync();
-	}
+	VIDEO_WaitForFlush();
 	printf("\nTerminal Output Initialized\n");
 }
