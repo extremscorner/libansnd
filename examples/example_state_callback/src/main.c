@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
 	printf("Press Y to resume.\n");
 	printf("\nPress the START button to exit.\n\n");
 	
-	while (true) {
+	while (SYS_MainLoop()) {
 		PAD_ScanPads();
 		u32 pressed_buttons = PAD_ButtonsDown(0);
 		
