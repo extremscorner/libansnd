@@ -843,13 +843,15 @@ void ansnd_uninitialize() {
 	u32 level;
 	_CPU_ISR_Disable(level);
 	
-	if(ansnd_library_initialized) {
+	if (ansnd_library_initialized) {
 		AUDIO_StopDMA();
 		AUDIO_RegisterDMACallback(NULL);
 		DSP_CancelTask(&ansnd_dsp_task);
 		
-		DSP_SendMailTo(DSP_MAIL_COMMAND | DSP_MAIL_END);
-		while(DSP_CheckMailTo());
+		if (!ansnd_dsp_yielding) {
+			DSP_SendMailTo(DSP_MAIL_COMMAND | DSP_MAIL_END);
+			while(DSP_CheckMailTo());
+		}
 		
 		do {
 			_CPU_ISR_Flash(level);
