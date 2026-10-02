@@ -691,7 +691,7 @@ static void ansnd_dsp_request_callback(dsptask_t* task) {
 	ansnd_dsp_done_mixing = true;
 	ansnd_dsp_stalled = false;
 	
-	ansnd_dsp_process_time = (gettime() - ansnd_dsp_start_time);
+	ansnd_dsp_process_time = (SYS_GetSystemTime() - ansnd_dsp_start_time);
 	
 	ansnd_parameter_block_t* parameter_block_base = (ansnd_parameter_block_t*)ansnd_dsp_dram_image;
 	DCInvalidateRange(parameter_block_base, PARAMETER_BLOCK_STRUCT_SIZE * MAX_PARAMETER_BLOCKS);
@@ -735,7 +735,7 @@ static void ansnd_dsp_request_callback(dsptask_t* task) {
 		DCFlushRange(ansnd_audio_buffer_out[ansnd_next_audio_buffer], ANSND_SOUND_BUFFER_SIZE);
 	}
 	
-	ansnd_total_process_time = (gettime() - ansnd_total_start_time);
+	ansnd_total_process_time = (SYS_GetSystemTime() - ansnd_total_start_time);
 }
 
 static void ansnd_audio_dma_callback() {
@@ -754,7 +754,7 @@ static void ansnd_audio_dma_callback() {
 	
 	ansnd_dsp_done_mixing = false;
 	
-	ansnd_total_start_time = gettime();
+	ansnd_total_start_time = SYS_GetSystemTime();
 	
 	if (ansnd_dsp_yielding) {
 		DSP_AssertTask(&ansnd_dsp_task);
@@ -763,7 +763,7 @@ static void ansnd_audio_dma_callback() {
 		while(DSP_CheckMailTo());
 	}
 	
-	ansnd_dsp_start_time = gettime();
+	ansnd_dsp_start_time = SYS_GetSystemTime();
 	
 	AUDIO_InitDMA((u32)ansnd_audio_buffer_out[ansnd_next_audio_buffer], ANSND_SOUND_BUFFER_SIZE);
 	
