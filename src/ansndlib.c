@@ -320,7 +320,10 @@ static void ansnd_load_dsp_task() {
 }
 
 static void ansnd_erase_voice(ansnd_voice_t* voice) {
-	memset(voice->parameter_block, 0, PARAMETER_BLOCK_STRUCT_SIZE);
+	// parameter_block is NULL if the voice was never configured
+	if (voice->parameter_block != NULL) {
+		memset(voice->parameter_block, 0, PARAMETER_BLOCK_STRUCT_SIZE);
+	}
 	memset(voice, 0, sizeof(ansnd_voice_t));
 }
 
@@ -785,7 +788,7 @@ s32 ansnd_initialize_samplerate(u8 output_samplerate) {
 	u32 level;
 	_CPU_ISR_Disable(level);
 	
-	if(!ansnd_library_initialized) {
+	if (!ansnd_library_initialized) {
 		ansnd_library_initialized = true;
 		
 		ansnd_dsp_done_mixing = false;
