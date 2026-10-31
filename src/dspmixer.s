@@ -418,7 +418,7 @@ resample_read_loop_end:
 	not'l     $acc0.m                     : $acx1.h, @$ar3   // filter step 512
 	andi      $acc0.m, #0x7FFF
 	mulc'l    $acc0.m, $acx1.h            : $acx1.l, @$ar3   // correction factor
-	mulcmv    $acc1.m, $acx1.h, $acc0                        // clear $prod ($acc1 is cleared)
+	movp      $acc0
 	ori       $acc0.m, #0x1403
 	mrr       $ar0,    $acc0.m
 // ^ Setup Coefficients Addressing ^
