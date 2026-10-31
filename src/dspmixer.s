@@ -140,9 +140,9 @@ PB_DELAY:             equ 0x25
 PB_FLAGS:             equ 0x26
 PB_SAMPLE_BUF_INDEX:  equ 0x27
 PB_SAMPLE_BUF_WRAP:   equ 0x28
-PB_FILTER_STEP:       equ 0x29
-PB_FILTER_STEP_512:   equ 0x2A
-PB_CORRECTION_FACTOR: equ 0x2B
+PB_FILTER_STEP_512:   equ 0x29
+PB_CORRECTION_FACTOR: equ 0x2A
+PB_PADDING:           equ 0x2B
 
 PB_ACC_FORMAT:        equ 0x2C
 PB_ACC_START_HI:      equ 0x2D
@@ -186,26 +186,24 @@ WORK_MMEM_SOUND_BUF_BASE2_LO: equ WORKING_MEMORY_BASE + 0x05
 WORK_CURR_PB_ADDR:            equ WORKING_MEMORY_BASE + 0x06
 
 WORK_RESAMPLE_FUNCTION:       equ WORKING_MEMORY_BASE + 0x07
-WORK_MIX_FUNCTION:            equ WORKING_MEMORY_BASE + 0x08
-WORK_NEXT_SAMPLE_FUNCTION:    equ WORKING_MEMORY_BASE + 0x09
+WORK_NEXT_SAMPLE_FUNCTION:    equ WORKING_MEMORY_BASE + 0x08
 
-WORK_R_VOL:                   equ WORKING_MEMORY_BASE + 0x0A
-WORK_L_VOL:                   equ WORKING_MEMORY_BASE + 0x0B
-WORK_REL_FREQ_HI:             equ WORKING_MEMORY_BASE + 0x0C
-WORK_REL_FREQ_LO:             equ WORKING_MEMORY_BASE + 0x0D
-WORK_COUNT_LO:                equ WORKING_MEMORY_BASE + 0x0E
-WORK_DELAY:                   equ WORKING_MEMORY_BASE + 0x0F
-WORK_FLAGS:                   equ WORKING_MEMORY_BASE + 0x10
-WORK_SAMPLE_BUFFER_INDEX:     equ WORKING_MEMORY_BASE + 0x11
-WORK_SAMPLE_BUFFER_WRAP:      equ WORKING_MEMORY_BASE + 0x12
-WORK_FILTER_STEP:             equ WORKING_MEMORY_BASE + 0x13
-WORK_FILTER_STEP_512:         equ WORKING_MEMORY_BASE + 0x14
-WORK_CORRECTION_FACTOR:       equ WORKING_MEMORY_BASE + 0x15
+WORK_R_VOL:                   equ WORKING_MEMORY_BASE + 0x09
+WORK_L_VOL:                   equ WORKING_MEMORY_BASE + 0x0A
+WORK_REL_FREQ_HI:             equ WORKING_MEMORY_BASE + 0x0B
+WORK_REL_FREQ_LO:             equ WORKING_MEMORY_BASE + 0x0C
+WORK_COUNT_LO:                equ WORKING_MEMORY_BASE + 0x0D
+WORK_DELAY:                   equ WORKING_MEMORY_BASE + 0x0E
+WORK_FLAGS:                   equ WORKING_MEMORY_BASE + 0x0F
+WORK_SAMPLE_BUFFER_INDEX:     equ WORKING_MEMORY_BASE + 0x10
+WORK_SAMPLE_BUFFER_WRAP:      equ WORKING_MEMORY_BASE + 0x11
+WORK_FILTER_STEP_512:         equ WORKING_MEMORY_BASE + 0x12
+WORK_CORRECTION_FACTOR:       equ WORKING_MEMORY_BASE + 0x13
 
-WORK_COEF_PAD_1:              equ WORKING_MEMORY_BASE + 0x16
-WORK_RESAMPLING_COEF_BUF:     equ WORKING_MEMORY_BASE + 0x17
-WORK_COEF_PAD_2:              equ WORKING_MEMORY_BASE + 0x27
-WORK_ERROR_FACTOR:            equ WORKING_MEMORY_BASE + 0x28
+WORK_COEF_PAD_1:              equ WORKING_MEMORY_BASE + 0x14
+WORK_RESAMPLING_COEF_BUF:     equ WORKING_MEMORY_BASE + 0x15
+WORK_COEF_PAD_2:              equ WORKING_MEMORY_BASE + 0x25
+WORK_ERROR_FACTOR:            equ WORKING_MEMORY_BASE + 0x26
 
 WORK_PCM_ACC_COEF:            equ WORKING_MEMORY_BASE + 0x30
 
@@ -241,18 +239,17 @@ setup:
 	m2
 	
 	// reset indexing registers
-	clr       $acc0
-	mrr       $ix0,    $acc0.m
-	mrr       $ix1,    $acc0.m
-	mrr       $ix2,    $acc0.m
-	mrr       $ix3,    $acc0.m
+	lri       $ix0,    #0
+	mrr       $ix1,    $ix0
+	mrr       $ix2,    $ix0
+	mrr       $ix3,    $ix0
 	// reset wrapping registers
 	lri       $wr0,    #0xFFFF
 	mrr       $wr1,    $wr0
 	mrr       $wr2,    $wr0
 	mrr       $wr3,    $wr0
 	
-	lri       $acx0.h, #(32768 / 2) // constant used in resampling
+	lri       $acx0.h, #0x7FFF // constant used in resampling
 	
 wait_command:
 	clr       $acc0
@@ -339,6 +336,7 @@ loop_mix_and_resample:
 // v Core Loop v
 	lri       $wr0,    #0x01FC
 	bloop     $acc1.m, mixing_complete
+	mrr       $st1,    $ar3
 	lr        $ar0,    @WORK_RESAMPLE_FUNCTION
 	jmpr      $ar0
 core_loop_end:
@@ -352,17 +350,12 @@ skip_pb:
 	addis     $acc1.m, #(PARAMETER_BLOCK_STRUCT_SIZE / 2)
 	jmp       loop_mix_and_resample
 
-// mono
-//  next mono sample in $acc0
-// stereo
-//  next sample left in $acc1
-//  next sample right in $acc0
-//  part of sample left in $prod
+// next sample left in $acc1
+// next sample right in $acc0
+// part of sample left in $prod
 // clobbers $acc0, $acc1, $acx1.h, $ar0, uses $ix3 == 0
-mix_mono:
-	mov       $acc1,   $acc0
-	clrp
-mix_stereo:
+mix:
+	mrr       $ar3,    $st1
 	lri       $ar0,    #WORK_R_VOL
 	addp'l    $acc1                       : $acx1.h, @$ar0
 	mulc'l    $acc0.m, $acx1.h            : $acc0.m, @$ar3
@@ -377,17 +370,15 @@ mixing_complete:
 // clobbers $acc1.m
 next_sample_stereo:
 	lrs       $acc1.m, @ACDAT
-	srri      @$ar2,   $acc1.m
 next_sample_mono:
+	srri      @$ar2,   $acc1.m
 	lrs       $acc1.m, @ACDAT
 next_sample_complete:
-	srri      @$ar1,   $acc1.m
+	clr's     $acc1                       : @$ar1,   $acc1.m
 	jmpr      $ar3
 
 // clobbers $acc0, $acc1, $ar0
 resample_no_resample:
-	mrr       $st1,    $ar3
-	
 	lr        $ar0,    @WORK_NEXT_SAMPLE_FUNCTION
 	lri       $ar3,    #resample_no_resample_read_end
 	jmpr      $ar0
@@ -397,17 +388,16 @@ resample_no_resample_read_end:
 	dar       $ar2
 	clrp'l                                : $acc1.m, @$ar2
 	
-	jmp       resample_end
+	jmp       mix
 
 // clobbers everything
+// uses $ix0 == filter_step_512
 resample:
-	mrr       $st1,    $ar3
-	
 // v Adjust Relative Frequency Offsets v
 	lri       $ar3,    #WORK_REL_FREQ_HI
-	clr'l     $acc0                       : $acx1.h, @$ar3
-	clr'l     $acc1                       : $acx1.l, @$ar3
-	lrr       $acc0.l, @$ar3
+	clr'l     $acc0                       : $acx1.h, @$ar3   // rel freq hi
+	clr'l     $acc1                       : $acx1.l, @$ar3   // rel freq lo
+	lrr       $acc0.l, @$ar3                                 // count lo
 	addax     $acc0,   $acx1
 	srr       @$ar3,   $acc0.l
 // ^ Adjust Relative Frequency Offsets ^
@@ -422,24 +412,18 @@ resample_read_loop_end:
 	
 // v Calculate Coefficients v
 // v Setup Coefficients Addressing v
-	lri       $ar3,    #WORK_FILTER_STEP
+	lri       $ar3,    #WORK_FILTER_STEP_512
 	
 	lsl       $acc0,   #15
-	not'l     $acc0.m                     : $acx1.h, @$ar3            // filter step
+	not'l     $acc0.m                     : $acx1.h, @$ar3   // filter step 512
 	andi      $acc0.m, #0x7FFF
-	mulc      $acc0.m, $acx1.h
-	movp      $acc0
-	lsr       $acc0,   #6
+	mulc'l    $acc0.m, $acx1.h            : $acx1.l, @$ar3   // correction factor
+	mulcmv    $acc1.m, $acx1.h, $acc0                        // clear $prod ($acc1 is cleared)
 	ori       $acc0.m, #0x1403
 	mrr       $ar0,    $acc0.m
 // ^ Setup Coefficients Addressing ^
-	lrri      $ix0,    @$ar3                                          // filter step 512
 	
-	// set the initial value of the error factor
-	// load first resampling coefficient
-	// load the correction factor
-	// increment $ar3 to the start of the resampling coefficient buffer (pad 1)
-	cw        0x65D7 // movr'ldaxn $acc1, $acx0.h : $acx1, @$ar0
+	addr'ln   $acc1.m, $acx0.h            : $acx1.h, @$ar0   // first resampling coefficient
 	
 	// partially unroll the loop to reduce instructions inside
 	mul       $acx1.l, $acx1.h
@@ -449,29 +433,26 @@ resample_coefficients_loop_end:
 	mulmv         $acx1.l, $acx1.h, $acc0
 	
 	clrp's                                : @$ar3,   $acc0.m
-	addr'ir   $acc1.m, $acx0.h            : $ar3
-	clr's     $acc0                       : @$ar3,   $acc1.m          // error factor
+	iar       $ar3
+	clr's     $acc0                       : @$ar3,   $acc1.m // error factor
 // ^ Calculate Coefficients ^
 	
 // v Calculate New Samples v
 	lri       $ar3,    #WORK_RESAMPLING_COEF_BUF
 	
 	// partially unroll the loop to reduce instructions inside
-	cw        0x89F3 // clr'ldax $acc1               : $acx1,   @$ar1
+	cw        0x89F3 // clr'ldax $acc1    : $acx1,   @$ar1
 	bloop     $acx0.l, resample_samples_loop_end
-	mulac'l       $acx1.l, $acx1.h, $acc1            : $acx1.h, @$ar2
+	mulac'l       $acx1.l, $acx1.h, $acc1 : $acx1.h, @$ar2
 resample_samples_loop_end:
 	cw            0x9CF3 // mulac'ldax $acx1.l, $acx1.h, $acc0 : $acx1, @$ar1
 	
-	nx'l                                             : $acx1.h, @$ar3 // error factor
-	mulcac'dr $acc0.m, $acx1.h, $acc1                : $ar1
+	lrri      $acx1.h, @$ar3                                 // error factor
+	mulcac'dr $acc0.m, $acx1.h, $acc1     : $ar1
 	mulcac    $acc1.m, $acx1.h, $acc0
 // ^ Calculate New Samples ^
 resample_end:
-	mrr       $ar3,    $st1
-	
-	lr        $ar0,    @WORK_MIX_FUNCTION
-	jmpr      $ar0
+	jmp       mix
 
 // --- Parameter block Functions --- //
 
@@ -495,16 +476,18 @@ init_parameter_block:
 	call      set_pb_address_acx1
 	lri       $ar3,    #WORK_R_VOL
 	
-	// copy 12 words $ar0 -> $ar3
-	bloopi    #12,     init_pb_copy_end
+	// copy 11 words $ar0 -> $ar3
+	bloopi    #11,     init_pb_copy_end
 	lrri          $acx0.l, @$ar0
 init_pb_copy_end:
 	srri          @$ar3,   $acx0.l
 // ^ load parameter block vals ^
 	
+	lr        $ix0,    @WORK_FILTER_STEP_512
+	
 // v Circular Buffer setup v
 	lri       $ar3,    #WORK_SAMPLE_BUFFER_INDEX
-	clr'l     $acc1                                  : $acx1.h, @$ar3
+	clr'l     $acc1                       : $acx1.h, @$ar3
 	
 	mrr       $acc1.m, $acx1.l // $acx1.l contains the current pb address
 	orr       $acc1.m, $acx1.h
@@ -524,7 +507,7 @@ init_pb_copy_end:
 	lri       $ar0,    #WORK_REL_FREQ_LO
 	
 	lrrd      $acx1.h, @$ar0
-	tstaxh'l  $acx1.h                                : $acc1.m, @$ar0
+	tstaxh'l  $acx1.h                     : $acc1.m, @$ar0
 	jne       init_pb_resample
 	andcf     $acc1.m, #0x0001
 	jlnz      init_pb_resample
@@ -538,31 +521,29 @@ init_pb_resample_end:
 	srri      @$ar0,   $acc1.l
 // ^ Resampling Function Pointer setup ^
 	
-// v Mono or Stereo Function Pointers setup v
+// v Mono or Stereo setup v
 	andf      $acc0.m, #VOICE_FLAG_STEREO
 	jlnz      channels_stereo
 channels_mono:
-	lri       $acc0.l, #mix_mono
+	mrr       $ar2,    $ar1
 	lri       $acc1.l, #next_sample_mono
 	jmp       channels_end
 channels_stereo:
-	lri       $acc0.l, #mix_stereo
 	lri       $acc1.l, #next_sample_stereo
 channels_end:
-	clr's     $acc0                                  : @$ar0,   $acc0.l
-	clr's     $acc1                                  : @$ar0,   $acc1.l
-// ^ Mono or Stereo Function Pointers setup ^
+	clr's     $acc0                       : @$ar0,   $acc1.l
+// ^ Mono or Stereo setup ^
 	
 // v Output Sound Buffer Address & Delay setup v
 	lri       $ar0,    #WORK_DELAY
-	lrr       $acc0.m, @$ar0
+	clr'l     $acc1                       : $acc0.m, @$ar0
 	lri       $acc1.m, #NUMBER_SAMPLES
-	sub       $acc1,   $acc0
+	sub'dr    $acc1,   $acc0              : $ar0
 	jge       init_pb_delay_some_samples
 init_pb_delay_no_samples:
 	lri       $acx1.h, #NUMBER_SAMPLES
 	subr      $acc0.m, $acx1.h
-	clr's     $acc1                                  : @$ar0,   $acc0.m
+	clr's     $acc1                       : @$ar0,   $acc0.m
 	jmp       init_pb_delay_end
 init_pb_delay_some_samples:
 	lsl       $acc0,   #1
@@ -587,11 +568,11 @@ uninit_parameter_block:
 	lrri      $acc0.m, @$ar3
 	srri      @$ar0,   $acc0.m
 	lrr       $acc0.m, @$ar3
-	clr's     $acc1                                  : @$ar0,   $acc0.m
+	clr's     $acc1                       : @$ar0,   $acc0.m
 	
 	mrr       $acc0.m, $ar1
 	andi      $acc0.m, #0x000F
-	clr's     $acc0                                  : @$ar0,   $acc0.m
+	clr's     $acc0                       : @$ar0,   $acc0.m
 	
 	ret
 
@@ -695,7 +676,7 @@ uninit_accelerator:
 	
 	ret
 
-// clobbers $acc1.h, $acc1.l, $acx1.l, $ix0
+// clobbers $acc1.h, $acc1.l, $acx1.l
 accelerator_address_overflow:
 	mrr       $st1,    $ar0
 	mrr       $st1,    $acc1.m
@@ -755,6 +736,7 @@ accelerator_address_overflow_no_loop_or_stream:
 // ^ Voice Finished ^
 	
 accelerator_address_overflow_end:
+	lr        $ix0,    @WORK_FILTER_STEP_512
 	lri       $wr0,    #0x01FC
 	mrr       $acc1.m, $st1
 	mrr       $ar0,    $st1

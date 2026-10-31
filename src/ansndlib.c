@@ -116,10 +116,10 @@ typedef struct ansnd_parameter_block_t {
 	u16 sample_buffer_index;                  // 0x27
 	u16 sample_buffer_wrapping;               // 0x28
 	
-	u16 filter_step;                          // 0x29
-	u16 filter_step_512;                      // 0x2A
+	u16 filter_step_512;                      // 0x2C
+	s16 correction_factor;                    // 0x2A
 	
-	s16 correction_factor;                    // 0x2B
+	u16 padding;                              // 0x2B
 	
 	u16 accelerator_format;                   // 0x2C
 	
@@ -349,8 +349,7 @@ static void ansnd_update_voice_pitch(ansnd_voice_t* voice) {
 	if (relative_frequency > base_frequency) {
 		filter_step = lrintf((f32)base_frequency * (dsp_frequency / adjusted_samplerate) * 0.5f);
 	}
-	parameter_block->filter_step       = filter_step;
-	parameter_block->correction_factor = filter_step & ~0xFF;
+	parameter_block->correction_factor = filter_step;
 	
 	parameter_block->filter_step_512 = (filter_step >> 6) & 0x01FC;
 	
