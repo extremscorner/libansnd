@@ -336,8 +336,9 @@ loop_mix_and_resample:
 // v Core Loop v
 	lri       $wr0,    #0x01FC
 	bloop     $acc1.m, mixing_complete
-	mrr       $st1,    $ar3
 	lr        $ar0,    @WORK_RESAMPLE_FUNCTION
+	mrr       $acc1.m, $st0
+	mrr       $st0,    $ar0 // swap out the loop return position
 	jmpr      $ar0
 core_loop_end:
 // ^ Core Loop ^
@@ -379,6 +380,7 @@ next_sample_complete:
 
 // clobbers $acc0, $acc1, $ar0
 resample_no_resample:
+	mrr       $st1,    $ar3
 	lr        $ar0,    @WORK_NEXT_SAMPLE_FUNCTION
 	lri       $ar3,    #resample_no_resample_read_end
 	jmpr      $ar0
@@ -393,6 +395,7 @@ resample_no_resample_read_end:
 // clobbers everything
 // uses $ix0 == filter_step_512
 resample:
+	mrr       $st1,    $ar3
 // v Adjust Relative Frequency Offsets v
 	lri       $ar3,    #WORK_REL_FREQ_HI
 	clr'l     $acc0                       : $acx1.h, @$ar3   // rel freq hi
@@ -678,7 +681,6 @@ uninit_accelerator:
 
 // clobbers $acc1.h, $acc1.l, $acx1.l
 accelerator_address_overflow:
-	mrr       $st1,    $ar0
 	mrr       $st1,    $acc1.m
 	lri       $wr0,    #0xFFFF
 	
@@ -736,10 +738,10 @@ accelerator_address_overflow_no_loop_or_stream:
 // ^ Voice Finished ^
 	
 accelerator_address_overflow_end:
+	lr        $ar0,    @WORK_NEXT_SAMPLE_FUNCTION
 	lr        $ix0,    @WORK_FILTER_STEP_512
 	lri       $wr0,    #0x01FC
 	mrr       $acc1.m, $st1
-	mrr       $ar0,    $st1
 	ret
 
 // --- Memory Operations --- //
