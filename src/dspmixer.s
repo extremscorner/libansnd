@@ -566,12 +566,10 @@ uninit_parameter_block:
 	call      set_pb_address_acx1
 	lri       $ar3,    #WORK_COUNT_LO
 	
+	bloopi    #3,      uninit_parameter_block_copy_loop
 	lrri      $acc0.m, @$ar3
+uninit_parameter_block_copy_loop:
 	srri      @$ar0,   $acc0.m
-	lrri      $acc0.m, @$ar3
-	srri      @$ar0,   $acc0.m
-	lrr       $acc0.m, @$ar3
-	clr's     $acc1                       : @$ar0,   $acc0.m
 	
 	mrr       $acc0.m, $ar1
 	andi      $acc0.m, #0x000F
@@ -588,24 +586,13 @@ init_accelerator:
 	
 	lrri      $acc1.m, @$ar0
 	srs       @ACFMT,  $acc1.m
+	
+	lri       $ar3,    #ACSAH
+	bloopi    #9,      init_accelerator_parameter_loop
 	lrri      $acc1.m, @$ar0
-	srs       @ACSAH,  $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACSAL,  $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACEAH,  $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACEAL,  $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCAH,  $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCAL,  $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACPDS,  $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACYN1,  $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACYN2,  $acc1.m
+init_accelerator_parameter_loop:
+	srri      @$ar3,   $acc1.m
+	
 	lrr       $acc1.m, @$ar0
 	srs       @ACGAN,  $acc1.m
 	
@@ -618,38 +605,12 @@ init_accelerator_coef_adpcm:
 	lri       $ix0,    #PB_ACC_COEF
 	call      set_pb_address_acx1
 init_accelerator_coef_end:
+	
+	lri       $ar3,    #ACCOEF
+	bloopi    #16,     init_accelerator_coef_loop
 	lrri      $acc1.m, @$ar0
-	srs       @ACCOEF+00, $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCOEF+01, $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCOEF+02, $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCOEF+03, $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCOEF+04, $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCOEF+05, $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCOEF+06, $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCOEF+07, $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCOEF+08, $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCOEF+09, $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCOEF+10, $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCOEF+11, $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCOEF+12, $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCOEF+13, $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCOEF+14, $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCOEF+15, $acc1.m
+init_accelerator_coef_loop:
+	srri      @$ar3,   $acc1.m
 	
 	ret
 
@@ -658,30 +619,18 @@ uninit_accelerator:
 	lri       $ix0,    #PB_ACC_START_HI
 	call      set_pb_address
 	
-	lrs       $acc1.m, @ACSAH
+	lri       $ar3,    #ACSAH
+	bloopi    #9,      uninit_accelerator_parameter_loop
+	lrri      $acc1.m, @$ar3
+uninit_accelerator_parameter_loop:
 	srri      @$ar0,   $acc1.m
-	lrs       $acc1.m, @ACSAL
-	srri      @$ar0,   $acc1.m
-	lrs       $acc1.m, @ACEAH
-	srri      @$ar0,   $acc1.m
-	lrs       $acc1.m, @ACEAL
-	srri      @$ar0,   $acc1.m
-	lrs       $acc1.m, @ACCAH
-	srri      @$ar0,   $acc1.m
-	lrs       $acc1.m, @ACCAL
-	srri      @$ar0,   $acc1.m
-	lrs       $acc1.m, @ACPDS
-	srri      @$ar0,   $acc1.m
-	lrs       $acc1.m, @ACYN1
-	srri      @$ar0,   $acc1.m
-	lrs       $acc1.m, @ACYN2
-	srr       @$ar0,   $acc1.m
 	
 	ret
 
 // clobbers $acc1.h, $acc1.l, $acx1.l
 accelerator_address_overflow:
 	mrr       $st1,    $acc1.m
+	mrr       $st1,    $ar3
 	lri       $wr0,    #0xFFFF
 	
 // v Accelerator Buffer Reset v
@@ -717,16 +666,12 @@ accelerator_address_overflow_looping:
 	lri       $ix0,    #PB_LOOP_START_HI
 	call      set_pb_address
 accelerator_address_overflow_loop_setup_skip: // same memory used for streaming and looping
+	
+	lri       $ar3,    #ACCAH
+	bloopi    #5,      accelerator_address_overflow_parameter_loop
 	lrri      $acc1.m, @$ar0
-	srs       @ACCAH,  $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACCAL,  $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACPDS,  $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACYN1,  $acc1.m
-	lrri      $acc1.m, @$ar0
-	srs       @ACYN2,  $acc1.m
+accelerator_address_overflow_parameter_loop:
+	srri      @$ar3,   $acc1.m
 	
 	jmp       accelerator_address_overflow_end
 accelerator_address_overflow_no_loop_or_stream:
@@ -741,6 +686,7 @@ accelerator_address_overflow_end:
 	lr        $ar0,    @WORK_NEXT_SAMPLE_FUNCTION
 	lr        $ix0,    @WORK_FILTER_STEP_512
 	lri       $wr0,    #0x01FC
+	mrr       $ar3,    $st1
 	mrr       $acc1.m, $st1
 	ret
 
