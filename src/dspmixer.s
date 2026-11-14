@@ -351,16 +351,14 @@ skip_pb:
 	addis     $acc1.m, #(PARAMETER_BLOCK_STRUCT_SIZE / 2)
 	jmp       loop_mix_and_resample
 
-// next sample left in $acc1
-// next sample right in $acc0
-// part of sample left in $prod
-// clobbers $acc0, $acc1, $acx1.h, $ar0, uses $ix3 == 0
+// next sample left in $acx1.h
+// next sample right in $acc0.m
+// clobbers $acc0, $acc1, $acx1.h, $ar3, uses $ix3 == 0
 mix:
 	mrr       $ar3,    $st1
-	lri       $ar0,    #WORK_R_VOL
-	addp'l    $acc1                       : $acx1.h, @$ar0
+	lr        $acc0.m, @WORK_R_VOL
 	mulc'l    $acc0.m, $acx1.h            : $acc0.m, @$ar3
-	lrr       $acx1.h, @$ar0
+	lr        $acx1.h, @WORK_L_VOL
 	mulcac'ln $acc1.m, $acx1.h, $acc0     : $acc1.m, @$ar3
 	addp'dr   $acc1                       : $ar3
 	srri      @$ar3,   $acc0.m
@@ -386,9 +384,9 @@ resample_no_resample:
 	jmpr      $ar0
 resample_no_resample_read_end:
 	dar       $ar1
-	lrri      $acc0.m, @$ar1
+	lrri      $acx1.h, @$ar1
 	dar       $ar2
-	clrp'l                                : $acc1.m, @$ar2
+	lrri      $acc1.m, @$ar2
 	
 	jmp       mix
 
@@ -453,6 +451,8 @@ resample_samples_loop_end:
 	lrri      $acx1.h, @$ar3                                 // error factor
 	mulcac'dr $acc0.m, $acx1.h, $acc1     : $ar1
 	mulcac    $acc1.m, $acx1.h, $acc0
+	addp'mv   $acc1                       : $acx1.h, $acc0.m
+	mrr       $acc1.m, $acc1.m
 // ^ Calculate New Samples ^
 resample_end:
 	jmp       mix

@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
 	
 	// generate samples
 	for (u32 i = 0; i < sound_samples; ++i) {
-		sound_buffer[i] = sin(2 * M_PI * sound_frequency_hz * ((f32)i / (f32)sound_sample_rate)) * 0.95f * 32767;
+		sound_buffer[i] = sin(2 * M_PI * sound_frequency_hz * ((f32)i / (f32)sound_sample_rate)) * 32767;
 	}
 	
 	// flush the sound data from the CPU cache
