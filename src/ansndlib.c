@@ -347,7 +347,7 @@ static void ansnd_update_voice_pitch(ansnd_voice_t* voice) {
 	
 	u16 filter_step = 0x7FFF;
 	if (relative_frequency > base_frequency) {
-		filter_step = lrintf((f32)base_frequency * (dsp_frequency / adjusted_samplerate) * 0.5f);
+		filter_step = lrintf((f32)0x7FFF * (dsp_frequency / adjusted_samplerate));
 	}
 	parameter_block->correction_factor = filter_step;
 	
