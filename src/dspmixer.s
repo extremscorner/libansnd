@@ -351,8 +351,8 @@ skip_pb:
 	addis     $acc1.m, #(PARAMETER_BLOCK_STRUCT_SIZE / 2)
 	jmp       loop_mix_and_resample
 
-// next sample left in $acx1.h
-// next sample right in $acc0.m
+// next sample left in $acc1.m
+// next sample right in $acx1.h
 // clobbers $acc0, $acc1, $acx1.h, $ar3, uses $ix3 == 0
 mix:
 	mrr       $ar3,    $st1
